@@ -97,9 +97,9 @@ inline void cs2::features::update_settings(void)
 
 
 #ifdef _KERNEL_MODE
-	config::visuals_enabled = 1;
+	config::visuals_enabled = 2;
 #else
-	config::visuals_enabled = 1;
+	config::visuals_enabled = 2;
 #endif
 
 
@@ -125,7 +125,7 @@ inline void cs2::features::update_settings(void)
 		config::triggerbot_button = 320;
 		config::aimbot_fov        = 2.0f;
 		config::aimbot_smooth     = 5.0f;
-		config::visuals_enabled   = 0;
+		config::visuals_enabled   = 2;
 		break;
 	case 245:
 		config::aimbot_button     = 321;
@@ -165,7 +165,7 @@ inline void cs2::features::update_settings(void)
 		config::triggerbot_button = 321;
 		config::aimbot_fov        = 2.0f;
 		config::aimbot_smooth     = 5.0f;
-		config::visuals_enabled   = 0;
+		config::visuals_enabled   = 2;
 		break;
 	case 251:
 		config::aimbot_button     = 317;
@@ -202,7 +202,7 @@ inline void cs2::features::update_settings(void)
 		config::triggerbot_button = 321;
 		config::aimbot_fov        = 2.0f;
 		config::aimbot_smooth     = 5.0f;
-		config::visuals_enabled   = 0;
+		config::visuals_enabled   = 2;
 		break;
 	}
 }
@@ -373,6 +373,62 @@ void cs2::features::run(void)
 	event_state = 0;
 
 	QWORD best_target = 0;
+	
+	//
+	// Separate WH rendering from Aimbot target selection
+	// If visuals_enabled is active, render ESP for all visible enemies first
+	//
+	if (config::visuals_enabled)
+	{
+		for (int i = 1; i < 64; i++)
+		{
+			QWORD ent = cs2::entity::get_client_entity(i);
+			if (ent == 0 || (ent == local_controller))
+			{
+				continue;
+			}
+
+			if (!cs2::entity::is_player(ent))
+			{
+				continue;
+			}
+
+			QWORD player = cs2::entity::get_player(ent);
+			if (player == 0)
+			{
+				continue;
+			}
+
+			if (ffa == 0)
+			{
+				if (cs2::player::get_team_num(player) == cs2::player::get_team_num(local_player))
+				{
+					continue;
+				}
+			}
+
+			QWORD node = cs2::player::get_node(player);
+			if (node == 0)
+			{
+				continue;
+			}
+
+			if (!cs2::player::is_valid(player, node))
+			{
+				continue;
+			}
+
+			vec3 head{};
+			if (!cs2::node::get_bone_position(node, 6, &head))
+			{
+				continue;
+			}
+
+			// Render ESP independently of aimbot logic
+			esp(local_player, player, head);
+		}
+	}
+
 	if (config::visuals_enabled == 2)
 	{
 		get_best_target(ffa, local_player_controller, local_player, num_shots, aim_punch, &best_target);
