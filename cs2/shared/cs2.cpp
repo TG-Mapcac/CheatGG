@@ -91,7 +91,6 @@ inline int get_viewangles_off() { return vm::get_target_os() == VmOs::Windows ? 
 #define JZ(val,field) \
 if ((val) == 0)  \
 { \
-LOG(__FILE__ ": line %d\n", __LINE__); \
 goto field; \
 } \
 

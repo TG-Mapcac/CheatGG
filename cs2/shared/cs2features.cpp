@@ -94,13 +94,7 @@ inline void cs2::features::update_settings(void)
 	config::rcs = 0;
 	config::aimbot_enabled = 1;
 	config::aimbot_multibone = 1;
-
-
-#ifdef _KERNEL_MODE
 	config::visuals_enabled = 2;
-#else
-	config::visuals_enabled = 2;
-#endif
 
 
 	switch (weapon_class)
